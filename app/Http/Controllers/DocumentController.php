@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SelectionOptionsRequest;
 use App\Models\Category;
 use App\Models\Document;
 use Exception;
@@ -65,7 +66,7 @@ class DocumentController extends Controller
         return $this->getDocumentsFromSelectedItemsString($request);
     }
 
-    private function getDocumentsFromSelectedItemsString(Request $request): Collection | null
+    private function getDocumentsFromSelectedItemsString(Request $request): Collection
     {
         $selected_items = $request->input('selected_items');
         $document_ids = $this->getDocumentIdsFromString($selected_items);
@@ -152,31 +153,21 @@ class DocumentController extends Controller
         session(['download-zip' => 'true']);
     }
 
-    public function applyOptionsToSelection(Request $request)
+    public function applyOptionsToSelection(SelectionOptionsRequest $request)
     {
-        $validated = $request->validate([
-            'selected_items' => 'required|string',
-            'new-category' => 'string|nullable',
-            'category' => 'integer|nullable',
-            'download-zip' => 'string|nullable',
-            'delete-all' => 'string|nullable',
-        ]);
+        $validated = $request->validated();
 
-        $selected_items = $request->input('selected_items');
-        $new_category = $request->input('new-category');
-        $category_id = $request->integer('category');
-        $download_zip = $request->input('download-zip');
-        $delete_all = $request->input('delete-all');
+        $new_category = $validated['new-category'];
+        $category_id = $validated['category'];
+        $download_zip = $validated['download-zip'];
+        $delete_all = $validated['delete-all'];
 
-        $documentIds = $this->getDocumentIdsFromString($selected_items);
-        $documents = Document::whereIn('id', $documentIds);
-
-        if ($documents->count() == 0) return 'Selected documents weren\'t found';
+        $documents = $this->getDocumentsFromSelectedItemsString($request);
 
         // Export to zip file checkbox checked
         if ($download_zip == 'on')
         {
-            $this->downloadZipFromDocuments($documents->get());
+            $this->downloadZipFromDocuments($documents);
         }
 
         // New category checkbox checked
@@ -199,7 +190,7 @@ class DocumentController extends Controller
         if (session()->get('download-zip') == 'true')
         {
             session()->forget('download-zip');
-            return response()->download(Storage::disk('local')->path('documents.zip'));
+            return response()->download($this->localStorage()->path('documents.zip'));
         }
 
         return Redirect::back();
@@ -208,6 +199,8 @@ class DocumentController extends Controller
 
     public function create(Request $request)
     {
+        // TODO: Add CreateDocumentRequest
+
         $validated = $request->validate([
             'documents.*' => 'required|mimes:jpg,jpeg,png,pdf|min:1',
             'titles.*' => 'required|string|min:1',
