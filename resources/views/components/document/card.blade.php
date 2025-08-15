@@ -1,4 +1,12 @@
-<div {{ $attributes->merge(['class' => 'font-comfortaa']) }}>
+@php
+  // Document fields
+  $file_path = asset($document->file_path);
+  $file_type = $document->getFileType();
+  $title = $document->title;
+  $id = $document->id;
+@endphp
+
+<div {{ $attributes->merge(['class' => 'font-comfortaa sm:w-[300px]']) }}>
   <div class="relative">
     <div class="absolute left-1 top-1">
       <!-- Selection button -->
@@ -8,10 +16,10 @@
     </div>
 
     <div class="px-6 pt-6 bg-gray-300 rounded-tr-xl rounded-tl-xl">
-      @if ($fileType == 'image')
-        <img src="{{ $fileSrc }}" class="bg-cover bg-no-repeat w-full h-50 rounded-tr-xl rounded-tl-xl" />
-      @elseif ($fileType == 'pdf')
-        <iframe src="{{ $fileSrc }}#toolbar=0&navpanes=0&scrollbar=0" type="application/pdf" class="border-none w-full h-50 rounded-tr-xl rounded-tl-xl"></iframe>
+      @if ($file_type == 'image')
+        <img src="{{ $file_path }}" class="bg-cover bg-no-repeat w-full h-50 rounded-tr-xl rounded-tl-xl" />
+      @elseif ($file_type == 'pdf')
+        <iframe src="{{ $file_path }}#toolbar=0&navpanes=0&scrollbar=0" type="application/pdf" class="border-none w-full h-50 rounded-tr-xl rounded-tl-xl"></iframe>
       @else
         <div class="bg-gray-300 w-full h-50 rounded-tr-xl rounded-tl-xl"></div>
       @endif

@@ -3,10 +3,10 @@
     $current_category = $category;
 @endphp
 
-<div {{ $attributes->merge(['class' => 'z-10 absolute bottom-0 w-full h-20']) }}>
+<div {{ $attributes->merge(['class' => 'z-10 absolute bottom-0 left-1/2 -translate-x-1/2 w-[360px] h-20']) }}>
   <x-document.info.button></x-document.info.button>
 
-  <div class="absolute w-full h-full bg-white bottom-0 rounded-tl-4xl rounded-tr-4xl overflow-y-hidden">
+  <div class="absolute w-full h-full bg-gray-100 bottom-0 rounded-tl-4xl rounded-tr-4xl overflow-y-hidden">
     <!-- Info block container -->
     <div class="w-[70%] mx-auto">
       <!-- Category label -->

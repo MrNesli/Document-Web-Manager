@@ -20,31 +20,26 @@
   </div>
 
   <!-- Component Heading -->
-  <h2 class="text-3xl font-comfortaa font-bold text-[#474747]"> Catégories </h2>
+  <h2 class="text-3xl font-comfortaa font-bold text-[#474747] xs:text-center xs:text-4xl"> Catégories </h2>
 
   <!-- Component Description -->
-  <p class="mt-2 font-comfortaa font-bold text-sm text-[#979EA6]">Ici vous allez pouvoir créer les catégories ou consulter les documents dans les catégories existantes</p>
+  <p class="mt-2 font-comfortaa font-bold text-sm text-[#979EA6] xs:text-center md:text-lg">Ici vous allez pouvoir créer les catégories ou consulter les documents dans les catégories existantes</p>
 
   <x-search.label class="mt-4 " search-name="{{ $data['search_name'] }}" on-clear-action="{{ route('categories') }}"></x-search.label>
 
   <!-- TODO: Add Container component for responsiveness with grid  -->
-  @if (count($data['items']) > 0)
-    @php
-        $categories = $data['items'];
-    @endphp
+  <div class="flex justify-center">
+    <div class="mt-14 mb-30 flex flex-col items-center md:flex-none md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8">
+      @if (count($data['items']) > 0)
+        @php
+            $categories = $data['items'];
+        @endphp
 
-    @for ($i = 0; $i < count($categories); $i++)
-      @php
-        $first = ($i == 0);
-        $last = ($i == (count($categories) - 1));
-      @endphp
-
-      <x-category.card @class([
-        'mt-14' => $first,
-        'mt-4' => !$first && !$last,
-        'mt-4 mb-30' => $last,
-      ]) title="{{ $categories[$i]->name }}" id="{{ $categories[$i]->id }}" imgsrc="/images/mountain-landscape.jpg">
-      </x-category.card>
-    @endfor
-  @endif
+        @foreach($categories as $category)
+          <x-category.card class="mt-4 md:m-0" :category="$category">
+          </x-category.card>
+        @endforeach
+      @endif
+    </div>
+  </div>
 @endsection

@@ -17,37 +17,27 @@
     <x-pagination redirect-to="{{ route('category', ['id' => $category->id]) }}" :pagination-data="$data" :category="$category"></x-pagination>
   </div>
 
-  <h2 class="mt-4 mb-2 text-3xl font-comfortaa font-bold text-[#474747]"> {{ $category->name }} </h2>
+  <h2 class="mt-4 mb-2 text-3xl font-comfortaa font-bold text-[#474747] xs:text-center sm:text-4xl lg:text-5xl"> {{ $category->name }} </h2>
 
   <x-search.label search-name="{{ $data['search_name'] }}" on-clear-action="{{ route('category', ['id' => $category->id]) }}"></x-search.label>
 
 
   <!-- TODO: Add files recently viewed section -->
 
-  <!-- TODO: Add a document container -->
-  @if (count($data['items']) > 0)
-    @php
-      $documents = $data['items'];
-    @endphp
-    @for ($i = 0; $i < count($documents); $i++)
-      @php
-        $first = ($i == 0);
-        $last = ($i == (count($documents) - 1));
+  <div class="flex justify-center">
+    <div class="mt-14 mb-30 flex flex-col items-center md:flex-none sm:grid sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 2xl:grid-cols-4">
+      @if (count($data['items']) > 0)
+        @php
+          $documents = $data['items'];
+        @endphp
 
-        $file_path = asset($documents[$i]->file_path);
-        $file_type = $documents[$i]->getFileType();
-        $title = $documents[$i]->title;
-        $id = $documents[$i]->id;
-      @endphp
-
-      <x-document.card @class([
-        'mt-14' => $first,
-        'mt-4' => !$first && !$last,
-        'mt-4 mb-30' => $last,
-      ]) file-src="{{ $file_path }}" file-type="{{ $file_type }}" title="{{ $title }}" id="{{ $id }}" :params="['search_name' => $data['search_name']]">
-      </x-document.card>
-    @endfor
-  @endif
+        @foreach($documents as $document)
+          <x-document.card class="mt-4 sm:mt-0" :document="$document" :params="['search_name' => $data['search_name']]">
+          </x-document.card>
+        @endforeach
+      @endif
+    </div>
+  </div>
 @endsection
 
 @push('scripts')

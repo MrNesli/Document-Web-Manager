@@ -8,6 +8,7 @@ use App\Http\Requests\ModifyDocumentRequest;
 use App\Models\Category;
 use App\Models\Document;
 use Exception;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\Request;
