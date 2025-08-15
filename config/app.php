@@ -123,4 +123,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'alias' => [
+        'Document' => \App\Utils\Document::class,
+    ],
 ];

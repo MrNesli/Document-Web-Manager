@@ -13,6 +13,8 @@
 
   <form class="flex flex-col pt-3" action="{{ route('documents.create') }}" method="POST" enctype="multipart/form-data">
     @csrf
+    <input class="hidden" type="text" name="current-category-id" value="{{ $current_category->id }}">
+
     <div class="flex flex-col mb-4">
       <label class="text-lg font-inter font-light pb-1" for="documents">Document(s)</label>
 

@@ -3,8 +3,6 @@
 namespace App\Providers;
 
 use App\Models\Category;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -17,7 +15,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // We register a binding for the File Facade's class
+        app()->bind('document', function () {
+            return new \App\Utils\Document();
+        });
     }
 
     /**
@@ -31,9 +32,5 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Blade::withoutDoubleEncoding();
-
-        /* Builder::macro('itemExists', function (int $id) { */
-        /*     return $this->where('id', $id)->exists(); */
-        /* }); */
     }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateDocumentRequest;
 use App\Http\Requests\SelectionOptionsRequest;
+use App\Http\Requests\ModifyDocumentRequest;
 use App\Models\Category;
 use App\Models\Document;
 use Exception;
@@ -16,19 +18,65 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use ZipArchive;
 
 class DocumentController extends Controller
 {
 
-    public function documentView(Request $request, string $id): View | string
+    /*
+     * Single document view
+     *
+     * @param Request $request
+     * @param string $id
+     *
+     * @return View
+     *
+     * */
+    public function documentView(Request $request, string $id): View
     {
-        if (!($document = Document::find($id))) return 'Document not found';
+        if (!($document = Document::find($id)))
+            throw new Exception('Document doesn\'t exist');
 
         return view('documents.index', $this->getDocumentViewData($request, $document));
     }
 
-    private function getDocumentViewData(Request $request, Document $document)
+    /*
+     * Document creation view
+     *
+     * @param Request $request
+     *
+     * @return View
+     *
+     * */
+    public function createView(Request $request): View
+    {
+        return view('documents.new', $this->getCreateDocumentViewData($request));
+    }
+
+    /*
+     * A view with a list of actions you can perform on selected documents
+     *
+     * @param Request $request
+     *
+     * @return View
+     *
+     * */
+    public function selectionOptionsView(Request $request): View
+    {
+        return view('documents.selection-options', $this->getSelectionOptionsViewData($request));
+    }
+
+    /*
+     * Returns single document view's data
+     *
+     * @param Request $request
+     * @param Document $document
+     *
+     * @return array
+     *
+     * */
+    private function getDocumentViewData(Request $request, Document $document): array
     {
         $data['document'] = $document;
         $data['category'] = Category::find($document->category_id);
@@ -37,11 +85,22 @@ class DocumentController extends Controller
         return $data;
     }
 
-    private function getCreateDocumentViewData(Request $request)
+    /*
+     * Returns document creation view's data
+     *
+     * @param Request $request
+     *
+     * @return array
+     *
+     * */
+    private function getCreateDocumentViewData(Request $request): array
     {
         $validated = $request->validate(['current_category_id' => 'integer']);
 
         $data['categories'] = Category::all();
+
+        if ($data['categories']->count() == 0)
+            throw new Exception('Cant create a document. No categories found.');
 
         if ($current_category_id = $request->integer('current_category_id'))
         {
@@ -51,23 +110,56 @@ class DocumentController extends Controller
             }
         }
 
+        // If data['current_category'] is null then it will assign the first category to it
+        // Null coalescing assignement operator
+        $data['current_category'] ??= Category::first();
+
         return $data;
     }
 
-    public function createView(Request $request): View | string
+    /*
+     * Returns "selected documents options" view's data
+     *
+     * @param Request $request
+     *
+     * @return array
+     *
+     * */
+    private function getSelectionOptionsViewData(Request $request): array
     {
-        return view('documents.new', $this->getCreateDocumentViewData($request));
+        $data['documents'] = $this->getDocumentsFromSelectedItems($request);
+        $data['categories'] = Category::all();
+        $data['selected_items'] = $request->input('selected_items');
+
+        return $data;
     }
 
-    private function getDocumentsFromSelectedItems(Request $request)
+    /*
+     * Validates request and returns selected documents
+     *
+     * @param Request $request
+     *
+     * @return array
+     *
+     * */
+    private function getDocumentsFromSelectedItems(Request $request): Collection
     {
         // Will it stop the execution of the parent function that's calling this one
         $validated = $request->validate(['selected_items' => 'string|required']);
         return $this->getDocumentsFromSelectedItemsString($request);
     }
 
+    /*
+     * Parses 'selected_items' request parameter, retrieves documents, and returns them
+     *
+     * @param Request $request
+     *
+     * @return Collection
+     *
+     * */
     private function getDocumentsFromSelectedItemsString(Request $request): Collection
     {
+        // NOTE: Testable
         $selected_items = $request->input('selected_items');
         $document_ids = $this->getDocumentIdsFromString($selected_items);
         $documents = Document::whereIn('id', $document_ids)->get();
@@ -78,57 +170,49 @@ class DocumentController extends Controller
         return $documents;
     }
 
-    private function getDocumentIdsFromString($string)
+    /*
+     * Turns selected items string into an array of integers
+     *
+     * @param Request $request
+     *
+     * @return array
+     *
+     * */
+    private function getDocumentIdsFromString($string): array
     {
         // "1,2,3,4,5" => [1, 2, 3, 4, 5]
         return array_map(fn ($value) => (int) $value, explode(',', $string));
     }
 
-    public function selectionOptions(Request $request)
-    {
-        $documents = $this->getDocumentsFromSelectedItems($request);
-        $categories = Category::all();
-        $selected_items = $request->input('selected_items');
-
-        return view('documents.selection-options', [
-            'selected_items' => $selected_items,
-            'documents' => $documents,
-            'categories' => $categories,
-        ]);
-    }
-
-    private function generateUniqueFileName(UploadedFile $file)
-    {
-        return uniqid() . '.' . $file->getClientOriginalExtension();
-    }
-
-    private function saveDocument(UploadedFile $file)
-    {
-        $path = "documents/{$this->generateUniqueFileName($file)}";
-        while (Document::where('file_path', $path)->exists())
-        {
-            $path = "documents/{$this->generateUniqueFileName($file)}";
-        }
-
-        // Saving document to the public storage
-        $this->publicStorage()->put($path, File::get($file->getRealPath()));
-
-        return ['file_path' => $path];
-    }
-
+    /*
+     * Shortcut for local (storage/app/private) disk
+     *
+     * @return FileSystem
+     *
+     * */
     private function localStorage(): FileSystem
     {
         return Storage::disk('local');
     }
 
+    /*
+     * Shortcut for public (storage/app/public) disk
+     *
+     * @return FileSystem
+     *
+     * */
     private function publicStorage(): FileSystem
     {
         return Storage::disk('public');
     }
 
-    private function downloadZipFromDocuments(Collection $documents)
+    /*
+     * Creates a new zip file out of a collection of documents
+     *
+     * */
+    private function createZipFromDocuments(Collection $documents): void
     {
-        $zip = new ZipArchive;
+        $zip = new ZipArchive();
         $zip_name = 'documents.zip';
         $zip_path = $this->localStorage()->path($zip_name);
 
@@ -150,30 +234,39 @@ class DocumentController extends Controller
             $zip->close();
         }
 
+        // Session field that will trigger zip file download using <meta> tag
         session(['download-zip' => 'true']);
     }
 
-    public function applyOptionsToSelection(SelectionOptionsRequest $request)
+    /*
+     * Applies selected actions to a selected list of documents
+     *
+     * @param SelectionOptionsRequest $request
+     *
+     * @return RedirectResponse
+     *
+     * */
+    public function applyOptionsToSelection(SelectionOptionsRequest $request): RedirectResponse
     {
         $validated = $request->validated();
 
         $new_category = $validated['new-category'];
-        $category_id = $validated['category'];
-        $download_zip = $validated['download-zip'];
-        $delete_all = $validated['delete-all'];
+        $category_id = $validated['category'] ?? '';
+        $download_zip = $validated['download-zip'] ?? '';
+        $delete_all = $validated['delete-all'] ?? '';
 
         $documents = $this->getDocumentsFromSelectedItemsString($request);
 
         // Export to zip file checkbox checked
         if ($download_zip == 'on')
         {
-            $this->downloadZipFromDocuments($documents);
+            $this->createZipFromDocuments($documents);
         }
 
         // New category checkbox checked
         if ($new_category == 'on')
         {
-            $documents->update(['category_id' => $category_id]);
+            $documents->each(fn (Document $doc) => $doc->updateCategory($category_id));
         }
         // Delete documents checkbox checked
         // Deleting documents at the end so we can create a zip file before
@@ -185,7 +278,13 @@ class DocumentController extends Controller
         return Redirect::to('categories');
     }
 
-    public function downloadZip()
+    /*
+     * Downloads "documents.zip" file
+     *
+     * @return RedirectResponse
+     *
+     * */
+    public function downloadZip(): RedirectResponse
     {
         if (session()->get('download-zip') == 'true')
         {
@@ -196,32 +295,27 @@ class DocumentController extends Controller
         return Redirect::back();
     }
 
-
-    public function create(Request $request)
+    /*
+     * Creates documents from the validated data
+     *
+     * @param array $validated - request's validated fields
+     *
+     * */
+    private function createDocuments(array $validated): void
     {
-        // TODO: Add CreateDocumentRequest
-
-        $validated = $request->validate([
-            'documents.*' => 'required|mimes:jpg,jpeg,png,pdf|min:1',
-            'titles.*' => 'required|string|min:1',
-            'categories.*' => 'required|integer|min:1',
-        ]);
-
-        $documents = $request->files->get('documents');
-        $titles = $request->input('titles');
-        $category_ids = $request->input('categories');
+        $documents = $validated['documents'];
+        $titles = $validated['titles'];
+        $category_ids = $validated['categories'];
 
         if (count($documents) != count($titles) ||
             count($titles) != count($category_ids))
-            return "Arrays must be equal";
+            throw new Exception('Arrays must be equal');
 
         for ($i = 0; $i < count($documents); $i++)
         {
             $category_id = $category_ids[$i];
             $title = $titles[$i];
-            $file = $documents[$i];
-
-            $file_path = $this->saveDocument($file)['file_path'];
+            $file_path = \App\Facades\Document::save($documents[$i]);
 
             Document::create([
                 'file_path' => $file_path,
@@ -229,69 +323,85 @@ class DocumentController extends Controller
                 'category_id' => $category_id,
             ]);
         }
-
-        return Redirect::to(route('category', ['id' => $category_id]));
     }
 
-    public function modify(Request $request, string $id)
+    /*
+     * Creates new documents
+     *
+     * @param CreateDocumentRequest $request
+     *
+     * @return RedirectResponse
+     *
+     * */
+    public function create(CreateDocumentRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'new-document' => 'mimes:jpg,jpeg,png,pdf',
-            'new-title' => 'string',
-            'new-category' => 'integer',
-        ]);
+        $validated = $request->validated();
+        $this->createDocuments($validated);
+        $current_category_id = $validated['current-category-id'];
 
-        $document = Document::where('id', $id);
+        return Redirect::to(route('category', ['id' => $current_category_id]));
+    }
 
-        if (!$document->exists()) return 'Document doesn\'t exist';
+    /*
+     * Modifies an existing document
+     *
+     * @param ModifyDocumentRequest $request
+     * @param string $id
+     *
+     * @return RedirectResponse
+     *
+     * */
+    public function modify(ModifyDocumentRequest $request, string $id)
+    {
+        $validated = $request->validated();
 
-        if ($request->has('new-document'))
-        {
-            // Deleting previous document
-            $this->publicStorage()->delete($document->first()->file_path);
-            $new_file = $request->file('new-document');
-            $new_file_path = $this->saveDocument($new_file)['file_path'];
-            $document->update(['file_path' => $new_file_path]);
-        }
+        if (!($document = Document::find($id)))
+            throw new Exception('Document doesn\'t exist');
 
-        if ($request->has('new-title'))
-        {
-            $new_title = $request->input('new-title');
-            $document->update(['title' => $new_title]);
-        }
-
-        if ($request->has('new-category'))
-        {
-            $new_category_id = $request->integer('new-category');
-            $document->update(['category_id' => $new_category_id]);
-        }
+        $document->updateFile($validated['new-document'] ?? null);
+        $document->updateTitle($validated['new-title'] ?? null);
+        $document->updateCategory($validated['new-category'] ?? null);
 
         return Redirect::back();
     }
 
+    /*
+     * Deletes an existing document
+     *
+     * @param Request $request
+     * @param string $id
+     *
+     * @return RedirectResponse
+     *
+     * */
     public function delete(Request $request, string $id)
     {
-        // TODO: Delete document file
-        $document = Document::where('id', $id);
-        if ($document->exists())
-        {
-            $category_id = $document->first()->category_id;
-            $document->delete();
-            return Redirect::to(route('category', ['id' => $category_id]));
-        }
+        if (!($document = Document::find($id)))
+            throw new Exception('Document doesn\'t exist');
 
-        return 'Document doesn\'t exist';
+        $category_id = $document->category_id;
+        $document->delete();
+
+        return Redirect::to(route('category', ['id' => $category_id]));
     }
 
-    public function download(Request $request, string $id)
+    /*
+     * Downloads an existing document
+     *
+     * @param Request $request
+     * @param string $id
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     *
+     * */
+    public function download(Request $request, string $id): BinaryFileResponse
     {
-        $document = Document::where('id', $id);
-        if ($document->exists())
-        {
-            [$document_path, $document_name] = [$document->first()->file_path, $document->first()->title];
-            return response()->download($this->publicStorage()->path($document_path), $document_name);
-        }
+        if (!($document = Document::find($id)))
+            throw new Exception('Document doesn\'t exist');
 
-        return 'Document doesn\'t exist';
+        $document_path = $this->publicStorage()->path($document->file_path);
+        $document_title = $document->title;
+
+        return response()->download($document_path, $document_title);
     }
 }
