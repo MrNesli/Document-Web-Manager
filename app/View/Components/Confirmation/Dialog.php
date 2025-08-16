@@ -1,21 +1,23 @@
 <?php
 
-namespace App\View\Components\Buttons;
+namespace App\View\Components\Confirmation;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class Delete extends Component
+class Dialog extends Component
 {
     /**
      * Create a new component instance.
      */
     public function __construct(
-        public ?int $itemId,
+        public string $title,
+        public string $routeOnConfirm,
+        /* public string $routeOnCancel, */
     )
     {
-        //
+
     }
 
     /**
@@ -23,6 +25,6 @@ class Delete extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.buttons.delete');
+        return view('components.confirmation.dialog');
     }
 }

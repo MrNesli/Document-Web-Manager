@@ -3,6 +3,8 @@
     $current_category = $category;
 @endphp
 
+<x-confirmation.dialog data-item-id="{{ $document->id }}" title="Vous êtes sur de vouloir supprimer ce document?" route-on-confirm="{{ route('documents.delete', ['id' => $document->id]) }}"> </x-confirmation.dialog>
+
 <div {{ $attributes->merge(['class' => 'z-10 absolute bottom-0 left-1/2 -translate-x-1/2 w-[360px] h-20']) }}>
   <x-document.info.button></x-document.info.button>
 
@@ -78,7 +80,7 @@
       <!-- Replace those by save and cancel buttons -->
       <div id="action-btns" class="flex mt-4">
         <!-- document.delete-button -->
-        <x-buttons.delete class="mr-4" delete-action="{{ route('documents.delete', ['id' => $document->id]) }}"></x-buttons.delete>
+        <x-buttons.delete class="mr-4"></x-buttons.delete>
 
         <!-- document.download-button -->
         <x-buttons.download id="{{ $document->id }}"></x-buttons.download>

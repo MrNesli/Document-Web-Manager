@@ -1,4 +1,4 @@
-<div class="mb-5">
+<div class="mb-5 w-[350px]">
   <div data-file-id="{{ $index + 1 }}" class="file-btn w-fit flex items-center mb-2">
     <button class="font-bold text-lg mr-1" type="button">
       Fichier {{ $index + 1 }}

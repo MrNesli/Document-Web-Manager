@@ -251,12 +251,14 @@ class DocumentController extends Controller
     {
         $validated = $request->validated();
 
-        $new_category = $validated['new-category'];
+        $new_category = $validated['new-category'] ?? '';
         $category_id = $validated['category'] ?? '';
         $download_zip = $validated['download-zip'] ?? '';
         $delete_all = $validated['delete-all'] ?? '';
 
         $documents = $this->getDocumentsFromSelectedItemsString($request);
+
+        /* dd($documents); */
 
         // Export to zip file checkbox checked
         if ($download_zip == 'on')
@@ -273,7 +275,7 @@ class DocumentController extends Controller
         // Deleting documents at the end so we can create a zip file before
         else if ($delete_all == 'on')
         {
-            $documents->delete();
+            $documents->each(fn (Document $doc) => $doc->delete());
         }
 
         return Redirect::to('categories');

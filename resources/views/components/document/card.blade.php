@@ -6,7 +6,7 @@
   $id = $document->id;
 @endphp
 
-<div {{ $attributes->merge(['class' => 'font-comfortaa sm:w-[300px]']) }}>
+<div {{ $attributes->merge(['class' => 'font-comfortaa w-[320px] sm:w-[300px]']) }}>
   <div class="relative">
     <div class="absolute left-1 top-1">
       <!-- Selection button -->

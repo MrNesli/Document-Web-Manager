@@ -1,3 +1,3 @@
-<svg width="{{ $width }}" height="{{ $height }}" viewBox="0 0 38 38" fill="none">
+<svg {{ $attributes->merge(['class' => 'cursor-pointer delete-icon', 'width' => $width, 'height' => $height, 'viewBox' => '0 0 38 38', 'fill' => 'none']) }}>
   <path fill="#E00000" d="M11.083 33.25a3.05 3.05 0 0 1-2.236-.93 3.05 3.05 0 0 1-.93-2.237V9.5H6.333V6.333h7.917V4.75h9.5v1.583h7.917V9.5h-1.584v20.583c0 .871-.31 1.617-.93 2.237a3.05 3.05 0 0 1-2.236.93H11.083ZM26.917 9.5H11.083v20.583h15.834V9.5ZM14.25 26.917h3.167v-14.25H14.25v14.25Zm6.333 0h3.167v-14.25h-3.167v14.25Z"/>
 </svg>
