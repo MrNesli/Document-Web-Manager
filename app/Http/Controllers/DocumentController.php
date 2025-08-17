@@ -318,7 +318,7 @@ class DocumentController extends Controller
         {
             $category_id = $category_ids[$i];
             $title = $titles[$i];
-            $file_path = \App\Facades\Document::save($documents[$i]);
+            $file_path = \App\Facades\Document::saveFile($documents[$i]);
 
             Document::create([
                 'file_path' => $file_path,

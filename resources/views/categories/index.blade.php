@@ -11,7 +11,6 @@
 @endsection
 
 @section('content')
-  <x-confirmation.dialog title="Vous êtes sur de vouloir supprimer cette catégorie?" route-on-confirm="{{ route('categories.delete', ['id' => 1]) }}"> </x-confirmation.dialog>
   <x-search.dialog title="Rechercher une catégorie" search-name="{{ $data['search_name'] }}"></x-search.dialog>
 
   <div class="mt-6 flex justify-between items-center">

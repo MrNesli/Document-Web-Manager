@@ -15,6 +15,7 @@
     @csrf
     <input class="hidden" type="text" name="current-category-id" value="{{ $current_category->id }}">
 
+    <!-- Image upload -->
     <div class="flex flex-col mb-4">
       <label class="text-lg font-inter font-light pb-1" for="documents">Document(s)</label>
 
@@ -30,14 +31,15 @@
     <!-- Container used when a single file is uploaded  -->
     <div id="single-file-container">
       <div class="flex flex-col mb-4">
+        <!-- Document name -->
         <label class="text-lg font-inter font-light pb-1" for="name">Nom du document</label>
-        <input class="max-w-[350px] text-md px-2 py-1 font-inter rounded-lg bg-white text-black border border-[#CACACA]" type="text" id="titles" name="titles[]" required>
+        <input class="xxs:w-[350px] text-md px-2 py-1 font-inter rounded-lg bg-white text-black border border-[#CACACA]" type="text" id="titles" name="titles[]" required>
       </div>
 
       <!-- Category selection -->
       <div class="flex flex-col">
         <label class="text-lg font-inter font-light pb-1" for="category">Catégorie</label>
-        <select class="max-w-[350px] text-black bg-white rounded-lg p-2" name="categories[]" id="categories">
+        <select class="xxs:w-[350px] text-black bg-white rounded-lg p-2" name="categories[]" id="categories">
           @foreach($categories as $category)
             @if (!is_null($current_category) && $category->id == $current_category->id)
               <option value="{{ $category->id }}" selected>{{ $category->name }}</option>

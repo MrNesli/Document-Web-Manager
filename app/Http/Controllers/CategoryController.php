@@ -156,13 +156,24 @@ class CategoryController extends Controller
     private function createAndValidateCategory(Request $request): void
     {
         // After small investigation: when Request object tries to validate fields via a Validator created in $request->validate() macro, once the validation fails, it will throw a ValidationException that will then be handled by \Illuminate\Foundation\Exceptions\Handler and it will transform this exception into a redirect to the previous URL.
-
-        $validator = Validator::make($request->all(), ['name' => 'required|string']);
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png',
+            'description' => 'nullable|string',
+        ]);
 
         if ($validator->fails())
-            throw new Exception('Failed to create category. Validation failed.');
+            throw new Exception('Failed to create category. Validation failed. ' . $validator->errors()->__toString());
 
-        Category::create(['name' => $request->input('name')]);
+        $image_path = $request->file('image') ? \App\Facades\Category::saveImage($request->file('image')) : null;
+
+        $category_data = [
+            'name' => $request->input('name'),
+            'img_path' => $image_path,
+            'description' => $request->input('description') ?? null,
+        ];
+
+        Category::create($category_data);
     }
 
     /*
@@ -188,7 +199,7 @@ class CategoryController extends Controller
         $category = Category::where('id', $id);
 
         $category->exists()
-            ? $category->delete()
+            ? $category->first()->delete()
             : throw new Exception('Failed to delete category. Category doesn\'t exist.');
     }
 }

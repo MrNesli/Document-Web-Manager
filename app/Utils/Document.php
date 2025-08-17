@@ -2,45 +2,25 @@
 
 namespace App\Utils;
 
-use Illuminate\Support\Facades\Storage;
+use App\Utils\File;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 
-class Document
+class Document extends File
 {
-    /*
-     * Generates a unique file name
-     *
-     * @param UploadedFile $file
-     *
-     * @return string - Generated file name
-     *
-     * */
-    private function generateUniqueFileName(UploadedFile $file): string
-    {
-        return uniqid() . '.' . $file->getClientOriginalExtension();
-    }
+    protected string $model = \App\Models\Document::class;
+    protected string $file_path_db_field = 'file_path';
 
     /*
-     * Saves uploaded file and returns its path relative to the public storage
+     * Saves document file and returns its path relative to the public storage
      *
      * @param UploadedFile $file
      *
      * @return string - Saved file's path
      *
      * */
-    public function save(UploadedFile $file): string
+    public function saveFile(UploadedFile $file): string
     {
-        $path = "documents/".$this->generateUniqueFileName($file);
-        while (\App\Models\Document::where('file_path', $path)->exists())
-        {
-            $path = "documents/".$this->generateUniqueFileName($file);
-        }
-
-        $file_real_path = \Illuminate\Support\Facades\File::get($file->getRealPath());
-
-        // Saving document to the public storage
-        Storage::disk('public')->put($path, $file_real_path);
-
-        return $path;
+        return $this->save($file, 'documents');
     }
 }

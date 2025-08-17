@@ -16,32 +16,63 @@ class Document extends Model
         'category_id',
     ];
 
-    public function updateFile(UploadedFile|null $new_file)
+    /*
+     * Deletes document file
+     *
+     * */
+    public function deleteFile(): void
+    {
+        Storage::disk('public')->delete($this->file_path);
+    }
+
+    /*
+     * Updates document file
+     *
+     * @param UploadedFile|null $new_file
+     *
+     * */
+    public function updateFile(UploadedFile|null $new_file): void
     {
         // NOTE: Testable
         if (!$new_file) return;
 
         // Deleting previous document
         Storage::disk('public')->delete($this->file_path);
-        $new_file_path = \App\Facades\Document::save($new_file);
+        $new_file_path = \App\Facades\Document::saveFile($new_file);
         $this->update(['file_path' => $new_file_path]);
     }
 
-    public function updateTitle(string|null $new_title)
+    /*
+     * Updates document title
+     *
+     * @param string|null $new_title
+     *
+     * */
+    public function updateTitle(string|null $new_title): void
     {
         if (!$new_title) return;
 
         $this->update(['title' => $new_title]);
     }
 
-    public function updateCategory(int|null $new_category_id)
+    /*
+     * Updates document category
+     *
+     * @param int|null $new_category_id
+     *
+     * */
+    public function updateCategory(int|null $new_category_id): void
     {
         if (!$new_category_id) return;
 
         $this->update(['category_id' => $new_category_id]);
     }
 
-    public function getFileSize()
+    /*
+     * Returns file's size or dimensions if it's an image
+     *
+     * */
+    public function getFileSize(): string
     {
         // NOTE: Testable
         $file_type = $this->getFileType($this->file_path);
@@ -55,9 +86,17 @@ class Document extends Model
             $bytes = Storage::disk('public')->size($this->file_path);
             return $this->bytesToReadableFormat($bytes);
         }
+        else
+        {
+            return '';
+        }
     }
 
-    private function bytesToReadableFormat($bytes)
+    /*
+     * Converts bytes to human readable format
+     *
+     * */
+    private function bytesToReadableFormat($bytes): string
     {
         // NOTE: Testable
         $kb = 1024;
@@ -82,17 +121,29 @@ class Document extends Model
         }
     }
 
-    public function getFileType()
+    /*
+     * Returns document's file type
+     *
+     * */
+    public function getFileType(): string
     {
         return $this->documentFileType();
     }
 
-    public function getFileName()
+    /*
+     * Returns document's file name
+     *
+     * */
+    public function getFileName(): string
     {
         return basename($this->file_path);
     }
 
-    private function documentFileType()
+    /*
+     * Converts file extension to file type
+     *
+     * */
+    private function documentFileType(): string
     {
         // NOTE: Testable
         if (is_null($this->file_path)) return 'Unknown';
@@ -106,7 +157,11 @@ class Document extends Model
         };
     }
 
-    private function getImageDimensionsString()
+    /*
+     * Returns image's dimensions
+     *
+     * */
+    private function getImageDimensionsString(): string
     {
         // NOTE: Testable
         if (Storage::disk('public')->exists($this->file_path))
