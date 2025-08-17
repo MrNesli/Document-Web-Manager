@@ -1,7 +1,5 @@
 # Document/File/Image Manager
 
-> Note: This is work in progress
-
 ### Features
 
 * Solid stack: Laravel, Blade, TailwindCSS. 
