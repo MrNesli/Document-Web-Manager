@@ -5,7 +5,7 @@
 ### Features
 
 * Solid stack: Laravel, Blade, TailwindCSS. 
-* Intuitive and responsive (not yet) UI
+* Intuitive and responsive UI
 * Navigate documents using a simple search query
 * Categorize your documents into descriptive sections 
 * Easily upload one or multiple documents
